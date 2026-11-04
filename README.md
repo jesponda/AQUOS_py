@@ -17,6 +17,20 @@ python -m venv .venv
 ```
 Abre http://127.0.0.1:8000/ .
 
+## Servir en la red local (modo estable)
+Waitress + WhiteNoise, con `DEBUG=0`. Un solo comando:
+```powershell
+.\scripts\serve.ps1                      # puerto 8000
+.\scripts\serve.ps1 -Port 8080 -ExtraHosts "aquos.allegion.local"
+```
+El script genera la llave secreta una vez en `%LOCALAPPDATA%\AQUOS\secret_key.txt` (fuera del repo), aplica migraciones, junta los estáticos y muestra las URLs. Los usuarios entran a `http://<IP-del-equipo>:<puerto>/`.
+Requiere abrir el puerto en el firewall (PowerShell como administrador):
+```powershell
+New-NetFirewallRule -DisplayName "AQUOS 8000" -Direction Inbound -Protocol TCP -LocalPort 8000 -Action Allow -Profile Domain,Private
+```
+Variables opcionales: `AQUOS_CSRF_ORIGINS` (orígenes extra separados por coma), `AQUOS_STATIC_ROOT`.
+Sin HTTPS: solo para red interna. Para desarrollo sigue valiendo `manage.py runserver`.
+
 ## Pruebas
 ```powershell
 .\.venv\Scripts\python.exe manage.py test

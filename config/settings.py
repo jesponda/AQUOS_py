@@ -30,6 +30,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -86,6 +87,21 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+# collectstatic copia aquí; también fuera de OneDrive. WhiteNoise los sirve con DEBUG=0.
+STATIC_ROOT = Path(os.environ.get("AQUOS_STATIC_ROOT", str(DB_PATH.parent / "staticfiles")))
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        )
+    },
+}
+
+# Orígenes extra para CSRF (p. ej. "http://aquos.allegion.local:8000"), separados por coma.
+CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get("AQUOS_CSRF_ORIGINS", "").split(",") if o]
 
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
