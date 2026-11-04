@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Calendario y plan · AQUOS{% endblock %}
+{% block content %}
+<div class="top">
+  <div><h1>Calendario y plan</h1><div class="desc">{{ area.name }} · {{ first|date:"F Y" }}</div></div>
+  <div class="row2" style="align-items:center">
+    <a href="?mes={{ prev|date:'Y-m' }}"><button class="btn" type="button">← Mes anterior</button></a>
+    <a href="?mes={{ next|date:'Y-m' }}"><button class="btn" type="button">Mes siguiente →</button></a>
+  </div>
+</div>
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="mes" value="{{ first|date:'Y-m' }}">
+  <div class="row2" style="align-items:flex-start">
+    <div class="card"><h3>Días hábiles</h3>
+      <div class="hint">Se propone lunes a viernes. Marca o desmarca los días (festivos, paros).</div>
+      <table style="max-width:520px;margin-top:8px"><thead><tr><th>L</th><th>M</th><th>M</th><th>J</th><th>V</th><th>S</th><th>D</th></tr></thead><tbody>
+      {% for week in weeks %}<tr>{% for d in week %}<td>{% if d %}<label><input type="checkbox" name="dia" value="{{ d.n }}"{% if d.on %} checked{% endif %}> {{ d.n }}</label>{% endif %}</td>{% endfor %}</tr>{% endfor %}
+      </tbody></table>
+      <p><b>Total de días hábiles: <span class="calc" id="total">{{ total }}</span></b></p>
+    </div>
+    <div class="card"><h3>Plan SIOP del mes</h3>
+      {% for c in categories %}
+      <div class="f"><label for="siop_{{ c.obj.code }}">{{ c.obj.name }} (piezas, SIOP mensual)</label>
+        <input id="siop_{{ c.obj.code }}" name="siop_{{ c.obj.code }}" type="text" inputmode="numeric" value="{{ c.siop|default_if_none:'' }}" data-siop></div>
+      <div class="hint">Plan diario sugerido: <span class="calc" data-daily="{{ c.obj.code }}">{{ c.daily|default_if_none:"—" }}</span></div>
+      {% endfor %}
+      <button class="btn primary" type="submit" style="margin-top:10px">Guardar calendario y plan</button>
+    </div>
+  </div>
+</form>
+<script>
+(function () {
+  var boxes = document.querySelectorAll('input[name="dia"]');
+  function update() {
+    var n = Array.prototype.filter.call(boxes, function (b) { return b.checked; }).length;
+    document.getElementById('total').textContent = n;
+    document.querySelectorAll('[data-siop]').forEach(function (i) {
+      var code = i.id.replace('siop_', ''), v = i.value.trim().replace(/,/g, '');
+      var out = document.querySelector('[data-daily="' + code + '"]');
+      out.textContent = (/^\d+$/.test(v) && n) ? Math.floor((Number(v) * 2 + n) / (n * 2)).toLocaleString('es-MX') : '—';
+    });
+  }
+  boxes.forEach(function (b) { b.addEventListener('change', update); });
+  document.querySelectorAll('[data-siop]').forEach(function (i) { i.addEventListener('input', update); });
+  update();
+})();
+</script>
+{% endblock %}
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:Order msdt:dt="string">1302100.00000000</mso:Order>
+<mso:ComplianceAssetId msdt:dt="string"></mso:ComplianceAssetId>
+<mso:_ExtendedDescription msdt:dt="string"></mso:_ExtendedDescription>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:TriggerFlowInfo msdt:dt="string"></mso:TriggerFlowInfo>
+<mso:ContentTypeId msdt:dt="string">0x010100B950E2C9FE16F74DAB3643B7B8B24F4D</mso:ContentTypeId>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+<title></title></head>

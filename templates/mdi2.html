@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ area.name }} · MDI 2 · AQUOS{% endblock %}
+{% block content %}
+<div class="top">
+  <div><h1>{{ area.name }}</h1><div class="desc">MDI 2 · gestión táctica por pilar SQDCP</div></div>
+  <div class="row2" style="align-items:center">
+    {% if can_edit_report %}<a href="{% url 'reporte' %}?fecha={{ day|date:'Y-m-d' }}"><button class="btn primary" type="button">Reporte del día</button></a>{% endif %}
+  </div>
+</div>
+
+<form method="get" class="chips">
+  <div class="chip"><label>Área</label><div>{{ area.name }}</div></div>
+  <div class="chip"><label for="periodo">Periodo</label>
+    <select id="periodo" name="periodo">{% for k, v in periods.items %}<option value="{{ k }}"{% if k == period %} selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+  <div class="chip"><label for="fecha">Fecha operativa</label><input id="fecha" type="date" name="fecha" value="{{ day|date:'Y-m-d' }}"></div>
+  <div class="chip" style="min-width:0"><label>&nbsp;</label><button class="btn" type="submit">Ver</button></div>
+</form>
+
+<div class="status">
+  {% if status == "cerrado" %}<span class="pill s-ok">✔ Cerrado</span>
+  {% elif status == "borrador" %}<span class="pill s-warn">▲ Borrador</span> Valores provisionales: el día aún no está cerrado.
+  {% else %}<span class="pill s-no">— Sin dato</span> No hay reportes cerrados en este periodo. No cuenta como cero.{% endif %}
+  {% if days_expected is not None %} Días con dato: <b>{{ days_with_data }}</b> de <b>{{ days_expected }}</b> hábiles.{% endif %}
+  <span class="hint">{{ start|date:"d-m-Y" }}{% if start != end %} a {{ end|date:"d-m-Y" }}{% endif %}</span>
+</div>
+
+<div class="matrix" style="margin-top:14px">
+  <div></div>{% for c in columns %}<div class="mh">{{ c.name }}</div>{% endfor %}
+  <div class="mr">KPI PRINCIPAL</div>{% for c in columns %}{% include "_main_cell.html" with m=c.main %}{% endfor %}
+  <div class="mr">SUB KPI</div>{% for c in columns %}{% include "_sub_cell.html" %}{% endfor %}
+  <div class="mr">PROCESS CHECK</div>{% for c in columns %}<div class="mcell empty na">Próximamente</div>{% endfor %}
+  <div class="mr">RAILS</div>{% for c in columns %}<div class="mcell empty na">Próximamente</div>{% endfor %}
+</div>
+<div class="leg">Estados: ✔ En meta · ✖ Fuera de meta · — Sin dato (con texto o símbolo, no solo color). Semana y mes suman solo días cerrados; Calidad y Entrega usan sumas de numeradores y denominadores, no promedios. Seguridad, Costos y Personal llegan en E2; Process Check en E3; Rails en E4.</div>
+{% endblock %}
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:Order msdt:dt="string">1302300.00000000</mso:Order>
+<mso:ComplianceAssetId msdt:dt="string"></mso:ComplianceAssetId>
+<mso:_ExtendedDescription msdt:dt="string"></mso:_ExtendedDescription>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:TriggerFlowInfo msdt:dt="string"></mso:TriggerFlowInfo>
+<mso:ContentTypeId msdt:dt="string">0x010100B950E2C9FE16F74DAB3643B7B8B24F4D</mso:ContentTypeId>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+<title></title></head>

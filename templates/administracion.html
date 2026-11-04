@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Administración · AQUOS{% endblock %}
+{% block content %}
+<div class="top"><div><h1>Administración</h1><div class="desc">Catálogos (solo lectura en esta entrega)</div></div></div>
+<section class="card"><h3>Áreas</h3>
+  <table><thead><tr><th>Área</th><th>Código</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>
+  {% for a in areas %}<tr><td>{{ a.name }}</td><td>{{ a.code }}</td><td>{{ a.get_kind_display }}</td><td>{{ a.get_status_display }}</td></tr>{% endfor %}
+  </tbody></table></section>
+<section class="card"><h3>Turnos</h3>
+  <table><thead><tr><th>Turno</th><th>Código</th><th>Activo</th></tr></thead><tbody>
+  {% for s in shifts %}<tr><td>{{ s.name }}</td><td>{{ s.code }}</td><td>{{ s.active|yesno:"Sí,No" }}</td></tr>{% endfor %}
+  </tbody></table></section>
+<section class="card"><h3>Categorías de producto</h3>
+  <table><thead><tr><th>Categoría</th><th>Código</th><th>Activa</th></tr></thead><tbody>
+  {% for c in categories %}<tr><td>{{ c.name }}</td><td>{{ c.code }}</td><td>{{ c.active|yesno:"Sí,No" }}</td></tr>{% endfor %}
+  </tbody></table></section>
+<p class="hint">Para editar catálogos y usuarios en esta entrega usa el acceso técnico en /admin/. La edición en pantalla llega en E1 a E2.</p>
+{% endblock %}
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:Order msdt:dt="string">1293300.00000000</mso:Order>
+<mso:ComplianceAssetId msdt:dt="string"></mso:ComplianceAssetId>
+<mso:_ExtendedDescription msdt:dt="string"></mso:_ExtendedDescription>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:TriggerFlowInfo msdt:dt="string"></mso:TriggerFlowInfo>
+<mso:ContentTypeId msdt:dt="string">0x010100B950E2C9FE16F74DAB3643B7B8B24F4D</mso:ContentTypeId>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+<title></title></head>

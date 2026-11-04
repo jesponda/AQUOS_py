@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Reporte del día · AQUOS{% endblock %}
+{% block content %}
+<div class="top">
+  <div><h1>Reporte del día · {{ area.name }}</h1><div class="desc">Se captura una sola vez, en orden SQDCP. MDI 2 se calcula desde aquí.</div></div>
+</div>
+
+<form method="get" class="chips">
+  <div class="chip"><label for="fecha">Fecha operativa</label><input id="fecha" type="date" name="fecha" value="{{ day|date:'Y-m-d' }}"></div>
+  <div class="chip"><label>Turno</label><div>{{ shift.name }}</div></div>
+  <div class="chip" style="min-width:0"><label>&nbsp;</label><button class="btn" type="submit">Ver día</button></div>
+</form>
+
+<div class="status">
+  {% if not report %}<span class="pill s-no">— Sin reporte</span> Aún no hay captura para esta fecha.
+  {% elif locked %}<span class="pill s-ok">✔ Cerrado</span> Cerrado por {{ report.closed_by.get_username }} el {{ report.closed_at|date:"d-m-Y H:i" }}. Solo lectura.
+  {% else %}<span class="pill s-warn">▲ Borrador</span> Los datos son provisionales y no entran a periodos acumulados.{% endif %}
+  {% if report.reopen_reason and not locked %} Reabierto: {{ report.reopen_reason }}{% endif %}
+</div>
+
+{% if errors %}<div class="banner" role="alert" style="background:var(--bad-bg);border-color:var(--bad);color:var(--bad)">
+  <b>No se guardó. Corrige:</b><ul style="margin:4px 0 0 18px">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+
+<form method="post" id="rep">
+  {% csrf_token %}
+  <input type="hidden" name="fecha" value="{{ day|date:'Y-m-d' }}">
+
+  <section class="card"><h2><b>S</b>Seguridad <span class="tag">Man.</span></h2>
+    <div class="row2">
+      <div class="f"><label for="acc">Accidentes registrables</label><input id="acc" name="acc" type="text" inputmode="numeric" value="{{ pv.acc }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label for="obs">Observaciones levantadas</label><input id="obs" name="obs" type="text" inputmode="numeric" value="{{ pv.obs }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label for="obsc">Observaciones cerradas</label><input id="obsc" name="obsc" type="text" inputmode="numeric" value="{{ pv.obsc }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label>% cierre de observaciones</label><br><span class="calc" id="obs_p">{{ obs_p }}</span></div>
+    </div>
+    <div class="hint">Observaciones y su cierre alimentarán el Sub KPI de Seguridad (próximamente). Un campo vacío es "sin dato", no cero.</div>
+  </section>
+
+  <section class="card"><h2><b>Q</b>Calidad <span class="tag">Cap. + Calc.</span></h2>
+    <table><thead><tr><th>Categoría</th><th class="n">Real (total)</th><th class="n">Scrap</th><th class="n">Buenas</th><th class="n">Yield</th></tr></thead><tbody>
+    {% for r in rows %}<tr>
+      <td>{{ r.category.name }}</td>
+      <td class="n"><span class="calc" data-qreal="{{ r.category.code }}">{{ r.real|default:"—" }}</span></td>
+      <td class="n"><input type="text" inputmode="numeric" name="scrap_{{ r.category.code }}" value="{{ r.scrap }}"{% if r.bad_scrap %} class="err"{% endif %}{% if locked %} disabled{% endif %}></td>
+      <td class="n"><span class="calc" data-good="{{ r.category.code }}">{{ r.good|default_if_none:"—" }}</span></td>
+      <td class="n"><span class="calc" data-yield="{{ r.category.code }}">{{ r.yield_s }}</span></td>
+    </tr>{% endfor %}
+    <tr><th>Total</th><th class="n"><span class="calc" id="t_real">{{ totals.real_for_yield|default:"—" }}</span></th><th class="n"><span class="calc" id="t_scrap">{{ totals.scrap }}</span></th><th class="n"></th><th class="n"><span class="calc" id="t_yield">{{ totals_yield }}</span></th></tr>
+    </tbody></table>
+    <div class="hint">Scrap = No OK. Buenas = Real − Scrap. Yield = Buenas ÷ Real. Real es producción total y se captura una sola vez, en Entrega.</div>
+  </section>
+
+  <section class="card"><h2><b>D</b>Entrega <span class="tag">Cap. + Calc.</span></h2>
+    <table><thead><tr><th>Categoría</th><th class="n">Plan</th><th class="n">Real (total)</th><th class="n">Plan vs Real</th><th class="n">Cumplimiento</th><th>Comentario</th></tr></thead><tbody>
+    {% for r in rows %}<tr>
+      <td>{{ r.category.name }}</td>
+      <td class="n"><input type="text" inputmode="numeric" name="plan_{{ r.category.code }}" value="{{ r.plan }}"{% if locked %} disabled{% endif %}></td>
+      <td class="n"><input type="text" inputmode="numeric" name="real_{{ r.category.code }}" value="{{ r.real }}"{% if locked %} disabled{% endif %}></td>
+      <td class="n"><span class="calc" data-diff="{{ r.category.code }}">{% if r.diff is None %}—{% else %}{{ r.diff }}{% endif %}</span></td>
+      <td class="n"><span class="calc" data-att="{{ r.category.code }}">{{ r.att_s }}</span></td>
+      <td><input type="text" name="comment_{{ r.category.code }}" value="{{ r.comment }}" maxlength="200" style="width:160px"{% if locked %} disabled{% endif %}></td>
+    </tr>{% endfor %}
+    <tr><th>Total</th><th class="n"><span class="calc" id="t_plan">{{ totals.plan|default:"—" }}</span></th><th class="n"><span class="calc" id="t_real2">{{ totals.real_for_attainment|default:"—" }}</span></th><th class="n"><span class="calc" id="t_diff">{{ totals_diff }}</span></th><th class="n"><span class="calc" id="t_att">{{ totals_att }}</span></th><th></th></tr>
+    </tbody></table>
+    <div class="hint">Plan sugerido: SIOP del mes ÷ días hábiles (<a href="{% url 'plan' %}">Calendario y plan</a>); es editable. Cumplimiento = Real ÷ Plan, con totales sumados.</div>
+  </section>
+
+  <section class="card"><h2><b>C</b>Costos <span class="tag">Man.</span></h2>
+    <div class="row2">
+      <div class="f"><label for="hg">Horas ganadas</label><input id="hg" name="hg" type="text" inputmode="decimal" value="{{ pv.hg }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label for="hp">Horas pagadas</label><input id="hp" name="hp" type="text" inputmode="decimal" value="{{ pv.hp }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label>Eficiencia</label><br><span class="calc" id="ef">{{ ef }}</span></div>
+    </div>
+    <div class="hint">Eficiencia = horas ganadas ÷ horas pagadas. Captura manual, hasta 2 decimales. Process Check de Costos: <b>Budget</b> (por definir).</div>
+  </section>
+
+  <section class="card"><h2><b>P</b>Personal <span class="tag">Man.</span></h2>
+    <div class="row2">
+      <div class="f"><label for="hc">Headcount asignado</label><input id="hc" name="hc" type="text" inputmode="numeric" value="{{ pv.hc }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label for="pres">Presentes</label><input id="pres" name="pres" type="text" inputmode="numeric" value="{{ pv.pres }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label for="falt">Faltas</label><input id="falt" name="falt" type="text" inputmode="numeric" value="{{ pv.falt }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label for="perm">Permisos</label><input id="perm" name="perm" type="text" inputmode="numeric" value="{{ pv.perm }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label for="apoyo">Apoyo / préstamo</label><input id="apoyo" name="apoyo" type="text" inputmode="numeric" value="{{ pv.apoyo }}"{% if locked %} disabled{% endif %}></div>
+      <div class="f"><label>Ausentismo</label><br><span class="calc" id="aus">{{ aus }}</span></div>
+    </div>
+    <div class="hint">Ausentismo = Faltas ÷ Headcount asignado. Presentes, permisos y apoyo son informativos, no se suman entre sí y no son obligatorios para cerrar.</div>
+  </section>
+
+  <section class="card">
+    {% if not locked %}
+    <div class="row2"><button class="btn" name="accion" value="guardar" type="submit">Guardar borrador</button>
+    {% if can_close %}<button class="btn primary" name="accion" value="cerrar" type="submit">Cerrar día</button>{% endif %}</div>
+    <div class="hint" style="margin-top:6px">Para cerrar se requieren Plan, Real y Scrap de cada categoría, accidentes, observaciones (levantadas y cerradas), headcount, faltas y las dos horas.</div>
+    {% endif %}
+  </section>
+</form>
+
+{% if locked and can_reopen %}
+<form method="post" class="card">
+  {% csrf_token %}
+  <input type="hidden" name="fecha" value="{{ day|date:'Y-m-d' }}">
+  <input type="hidden" name="accion" value="reabrir">
+  <h3>Reabrir el día (solo Manager)</h3>
+  <div class="f"><label for="motivo">Motivo (obligatorio)</label><input id="motivo" name="motivo" maxlength="300" style="width:100%" required></div>
+  <button class="btn" type="submit">Reabrir</button>
+</form>
+{% endif %}
+
+<script>
+/* Cálculo en vivo solo de apoyo visual; el servidor recalcula y valida al guardar. */
+(function () {
+  var cats = [{% for r in rows %}"{{ r.category.code }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+  function val(name, dec) { var e = document.querySelector('[name="' + name + '"]'); var t = e ? e.value.trim().replace(/,/g, '') : ''; var re = dec ? /^\d+(\.\d{1,2})?$/ : /^\d+$/; return re.test(t) ? Number(t) : null; }
+  function num(name) { return val(name, false); }
+  function pct(x) { return x === null ? '—' : (x * 100).toFixed(1) + '%'; }
+  function put(sel, v) { var e = document.querySelector(sel); if (e) e.textContent = v; }
+  function fmt(n) { return n === null ? '—' : n.toLocaleString('es-MX'); }
+  function calc() {
+    var tp = 0, tr = 0, ts = 0, trY = 0, okA = true, okY = true;
+    cats.forEach(function (c) {
+      var p = num('plan_' + c), r = num('real_' + c), s = num('scrap_' + c);
+      put('[data-qreal="' + c + '"]', fmt(r));
+      put('[data-good="' + c + '"]', (r !== null && s !== null) ? fmt(r - s) : '—');
+      put('[data-yield="' + c + '"]', (r && s !== null) ? pct((r - s) / r) : '—');
+      put('[data-diff="' + c + '"]', (p !== null && r !== null) ? ((r - p >= 0 ? '+' : '') + (r - p).toLocaleString('es-MX')) : '—');
+      put('[data-att="' + c + '"]', (p && r !== null) ? pct(r / p) : '—');
+      var sc = document.querySelector('[name="scrap_' + c + '"]');
+      if (sc) sc.classList.toggle('err', r !== null && s !== null && s > r);
+      if (p === null || r === null) okA = false; else { tp += p; tr += r; }
+      if (r === null || s === null) okY = false; else { trY += r; ts += s; }
+    });
+    put('#t_plan', okA ? fmt(tp) : '—'); put('#t_real2', okA ? fmt(tr) : '—');
+    put('#t_diff', okA ? ((tr - tp >= 0 ? '+' : '') + (tr - tp).toLocaleString('es-MX')) : '—');
+    put('#t_att', (okA && tp) ? pct(tr / tp) : '—');
+    put('#t_real', okY ? fmt(trY) : '—'); put('#t_scrap', okY ? fmt(ts) : '—');
+    put('#t_yield', (okY && trY) ? pct((trY - ts) / trY) : '—');
+    var o = num('obs'), oc = num('obsc'); put('#obs_p', (o && oc !== null) ? pct(oc / o) : '—');
+    var hc = num('hc'), f = num('falt'); put('#aus', (hc && f !== null) ? pct(f / hc) : '—');
+    var hg = val('hg', true), hp = val('hp', true); put('#ef', (hp && hg !== null) ? pct(hg / hp) : '—');
+  }
+  document.getElementById('rep').addEventListener('input', calc); calc();
+})();
+</script>
+{% endblock %}
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:Order msdt:dt="string">1301900.00000000</mso:Order>
+<mso:_ExtendedDescription msdt:dt="string"></mso:_ExtendedDescription>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:ComplianceAssetId msdt:dt="string"></mso:ComplianceAssetId>
+<mso:TriggerFlowInfo msdt:dt="string"></mso:TriggerFlowInfo>
+<mso:ContentTypeId msdt:dt="string">0x010100B950E2C9FE16F74DAB3643B7B8B24F4D</mso:ContentTypeId>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+<title></title></head>

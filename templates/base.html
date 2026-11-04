@@ -1,0 +1,48 @@
+{% load static %}<!doctype html>
+<html lang="es" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+  <link rel="stylesheet" href="{% static 'css/aquos.css' %}">
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:Order msdt:dt="string">1293200.00000000</mso:Order>
+<mso:ComplianceAssetId msdt:dt="string"></mso:ComplianceAssetId>
+<mso:_ExtendedDescription msdt:dt="string"></mso:_ExtendedDescription>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:TriggerFlowInfo msdt:dt="string"></mso:TriggerFlowInfo>
+<mso:ContentTypeId msdt:dt="string">0x010100B950E2C9FE16F74DAB3643B7B8B24F4D</mso:ContentTypeId>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+<nav>
+  <div class="logo"><img src="{% static 'img/Logo.jpeg' %}" alt="AQUOS Unified Operating System"></div>
+  {% for item in nav_items %}
+    {% if item.url_name %}
+      <a href="{% url item.url_name %}"{% if item.key == active %} class="on"{% endif %}>{{ item.label }}</a>
+    {% else %}
+      <div class="soon" title="Se construye en una entrega posterior">{{ item.label }} — Próximamente</div>
+    {% endif %}
+  {% endfor %}
+  <small>Áreas</small>
+  {% for area in nav_areas %}
+    <div class="soon">{{ area.name }}{% if area.status != 'activa' %} — {{ area.get_status_display }}{% else %} — en construcción{% endif %}</div>
+  {% endfor %}
+  <form method="post" action="{% url 'logout' %}" style="margin-top:24px">
+    {% csrf_token %}
+    <div class="soon" style="opacity:.8;padding:4px 10px">{{ request.user.get_username }}{% if user_role %} · {{ user_role }}{% endif %}</div>
+    <button class="btn" style="width:100%;margin-top:6px">Cerrar sesión</button>
+  </form>
+</nav>
+<main>
+  {% if messages %}{% for m in messages %}<div class="banner">{{ m }}</div>{% endfor %}{% endif %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

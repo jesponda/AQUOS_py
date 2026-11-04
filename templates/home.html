@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Inicio · AQUOS{% endblock %}
+{% block content %}
+<div class="top">
+  <div><h1>Inicio</h1><div class="desc">Allegion Querétaro Unified Operating System</div></div>
+  <div class="user"><div><b>{{ request.user.get_full_name|default:request.user.get_username }}</b>{% if user_role %}<small>{{ request.user.profile.get_role_display }}</small>{% endif %}</div></div>
+</div>
+<section class="card" style="min-height:190px"><h3>Valores de Allegion</h3>
+  <div class="vban">
+    {% for code, caption in values %}
+    <figure><img src="{% static 'img/valores/' %}{{ code }}.png" alt=""><figcaption>{{ caption }}</figcaption></figure>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:Order msdt:dt="string">1293100.00000000</mso:Order>
+<mso:ComplianceAssetId msdt:dt="string"></mso:ComplianceAssetId>
+<mso:_ExtendedDescription msdt:dt="string"></mso:_ExtendedDescription>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:TriggerFlowInfo msdt:dt="string"></mso:TriggerFlowInfo>
+<mso:ContentTypeId msdt:dt="string">0x010100B950E2C9FE16F74DAB3643B7B8B24F4D</mso:ContentTypeId>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+<title></title></head>

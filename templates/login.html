@@ -1,0 +1,38 @@
+{% load static %}<!doctype html>
+<html lang="es" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+  <link rel="stylesheet" href="{% static 'css/aquos.css' %}">
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:Order msdt:dt="string">1292900.00000000</mso:Order>
+<mso:ComplianceAssetId msdt:dt="string"></mso:ComplianceAssetId>
+<mso:_ExtendedDescription msdt:dt="string"></mso:_ExtendedDescription>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Esponda, Jose Miguel</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:TriggerFlowInfo msdt:dt="string"></mso:TriggerFlowInfo>
+<mso:ContentTypeId msdt:dt="string">0x010100B950E2C9FE16F74DAB3643B7B8B24F4D</mso:ContentTypeId>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body style="display:block">
+<div class="login"><div class="box">
+  <img src="{% static 'img/Logo.jpeg' %}" alt="AQUOS Unified Operating System">
+  <h3>Iniciar sesión</h3>
+  {% if form.errors %}<div class="errmsg" role="alert">✖ Usuario o contraseña incorrectos, o el usuario no está activo.</div>{% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="f"><label for="id_username">Usuario</label>{{ form.username }}</div>
+    <div class="f"><label for="id_password">Contraseña</label>{{ form.password }}</div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn primary" type="submit">Entrar</button>
+  </form>
+  <div class="hint" style="margin-top:10px">Piloto local. El acceso lo valida el servidor.</div>
+</div></div>
+</body>
+</html>
